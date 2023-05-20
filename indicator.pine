@@ -1,0 +1,72 @@
+//@version=5
+indicator("Entry Helper", overlay=true)
+
+// Define input parameters
+showLongs = input.bool(true, title="Show Long Signals")
+showShorts = input.bool(true, title="Show Short Signals")
+volumeSMALength = input(50, title="Volume SMA Length")
+proximityThreshold = input(0.15, title="Proximity Threshold")
+engulfingThreshold = input(0.5, title="Engulfing Threshold")
+priceLevelsString = input.string("0.0", title="Price Levels (comma-delimited list)")
+
+// Split price level string into an array of strings
+priceLevels = str.split(priceLevelsString, ",")
+
+// Check that volume is sufficient based on an SMA. Volume must be no lower than 5% less than the average
+volumeSMA = ta.sma(volume, volumeSMALength)
+sufficientVolume = volume > volumeSMA - (volumeSMA * 0.05)
+
+// Get current candle's buy and sell volume
+buyVolume = (high==low) ? 0 : volume *  (close-low)  / (high-low)
+sellVolume = (high==low) ? 0 : volume * (high-close) / (high-low)
+
+// Get previous candle's buy and sell volume
+prevBuyVolume = (high[1]==low[1]) ? 0 : volume[1] *  (close[1]-low[1])  / (high[1]-low[1])
+prevSellVolume = (high[1]==low[1]) ? 0 : volume[1] * (high[1]-close[1]) / (high[1]-low[1])
+
+// Get previous previous candle's buy and sell volume
+prevPrevBuyVolume = (high[2]==low[2]) ? 0 : volume[2] *  (close[2]-low[2])  / (high[2]-low[2])
+prevPrevSellVolume = (high[2]==low[2]) ? 0 : volume[2] * (high[2]-close[2]) / (high[2]-low[2])
+
+// Caculate the average buy and sell volume for the previous and previous previous candle
+prevAvgBuyVolume = (prevBuyVolume + prevPrevBuyVolume) / 2
+prevAvgSellVolume = (prevSellVolume + prevPrevSellVolume) / 2
+
+// Calculate the open/close range of the current candle
+candleRange = math.abs(close - open)
+
+// Calculate the high/low range of the current candle
+candleHighLowRange = math.abs(high - low)
+
+// Calculate the open/close range of the previous candle
+prevCandleRange = math.abs(close[1] - open[1])
+
+// Calculate the high/low range of the previous candle
+prevCandleHighLowRange = math.abs(high[1] - low[1])
+
+// Determine if the candle is close enough to a price level
+isAtSupport = false
+isAtResistance = false
+
+for level in priceLevels
+    levelFloat = str.tonumber(level)
+    if high >= levelFloat - proximityThreshold and high <= levelFloat + proximityThreshold or open >= levelFloat - proximityThreshold and open <= levelFloat + proximityThreshold
+        isAtResistance := true
+        break
+
+for level in priceLevels
+    levelFloat = str.tonumber(level)
+    if low >= levelFloat - proximityThreshold and low <= levelFloat + proximityThreshold or open >= levelFloat - proximityThreshold and open <= levelFloat + proximityThreshold
+        isAtSupport := true
+        break
+
+// Check if the current candle is bullish or bearish
+isBullishCandle() =>
+    (close > open[1] and (close[1] < open[1] or (close[1] > open[1] and candleRange > prevCandleRange))) or (close[1] < open[1] and close > open and (candleHighLowRange > prevCandleHighLowRange * engulfingThreshold))
+
+isBearishCandle() =>
+    (close < open[1] and (close[1] > open[1] or (close[1] < open[1] and candleRange > prevCandleRange))) or (close[1] > open[1] and close < open and (candleHighLowRange > prevCandleHighLowRange * engulfingThreshold))
+    
+// Plot the indications of long and short entries
+plotshape(showLongs and isBullishCandle() and buyVolume > prevAvgBuyVolume and sellVolume < prevAvgSellVolume and sufficientVolume and isAtSupport, title="Long", location=location.belowbar, color=color.green, transp=0, style=shape.triangleup, text="Long")
+plotshape(showShorts and isBearishCandle() and sellVolume > prevAvgSellVolume and buyVolume < prevAvgBuyVolume and sufficientVolume and isAtResistance, title="Short", location=location.abovebar, color=color.red, transp=0, style=shape.triangledown, text="Short")
