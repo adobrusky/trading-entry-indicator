@@ -7,14 +7,13 @@ showShorts = input.bool(true, title="Show Short Signals")
 volumeSMALength = input(50, title="Volume SMA Length")
 acceptableVolumeTolerance = input(0.05, title="Acceptable Volume Tolerance (% less than average)")
 proximityThreshold = input(0.15, title="Proximity Threshold (cents)")
-strengthThreshold = input(0.5, title="Strength Threshold (%)")
-directionalThreshold = input(0.05, title="Directional Threshold (cents)")
+strengthThreshold = input(0.55, title="Strength Threshold (%)")
 priceLevelsString = input.string("0.0", title="Price Levels (comma-delimited list)")
 
 // Split price level string into an array of strings
 priceLevels = str.split(priceLevelsString, ",")
 
-// Check that volume is sufficient based on an SMA. Volume must be no lower than 5% less than the average
+// Check that volume is sufficient based on an SMA. Volume must be no lower than the average - the acceptable volume threshold * average. This allows users to tweak what they consider acceptable volume.
 volumeSMA = ta.sma(volume, volumeSMALength)
 sufficientVolume = volume > volumeSMA - (volumeSMA * acceptableVolumeTolerance)
 
@@ -30,52 +29,51 @@ prevSellVolume = (high[1]==low[1]) ? 0 : volume[1] * (high[1]-close[1]) / (high[
 prevPrevBuyVolume = (high[2]==low[2]) ? 0 : volume[2] *  (close[2]-low[2])  / (high[2]-low[2])
 prevPrevSellVolume = (high[2]==low[2]) ? 0 : volume[2] * (high[2]-close[2]) / (high[2]-low[2])
 
-// Caculate the average buy and sell volume for the previous and previous previous candle
+// Calculate the average buy and sell volume for the previous two candles
 prevAvgBuyVolume = (prevBuyVolume + prevPrevBuyVolume) / 2
 prevAvgSellVolume = (prevSellVolume + prevPrevSellVolume) / 2
 
 // Calculate the open/close range of the current candle
 candleOpenCloseRange = math.abs(close - open)
 
-// Calculate the high/low range of the current candle
-candleHighLowRange = math.abs(high - low)
-
 // Calculate the open/close range of the previous candle
 prevCandleOpenCloseRange = math.abs(close[1] - open[1])
 
-// Calculate the high/low range of the previous candle
-prevCandleHighLowRange = math.abs(high[1] - low[1])
-
-// Determine if the candle is close enough to a price level
+// Determine if the current candle is close enough to a price level based on the proximity threshold. 
+// A candle is at support if any part of the bottom wick is within the proximity threshold of a price level
+// A candle is at resistance if any part of the top wick is within the proximity threshold of a price level
 isAtSupport = false
 isAtResistance = false
-
 for level in priceLevels
     levelFloat = str.tonumber(level)
-    if (math.abs(high - levelFloat) <= proximityThreshold or (high > levelFloat and open < levelFloat and close < levelFloat)) or math.abs(open - levelFloat) <= proximityThreshold
+    priceLevelRangeStart = levelFloat - proximityThreshold
+    priceLevelRangeEnd = levelFloat + proximityThreshold
+    if (priceLevelRangeStart >= open and priceLevelRangeStart <= low) or (priceLevelRangeEnd >= open and priceLevelRangeEnd <= low) or (open >= priceLevelRangeStart and open <= priceLevelRangeEnd) or (low >= priceLevelRangeStart and low <= priceLevelRangeEnd)
+        isAtSupport := true
+        break
+for level in priceLevels
+    levelFloat = str.tonumber(level)
+    priceLevelRangeStart = levelFloat - proximityThreshold
+    priceLevelRangeEnd = levelFloat + proximityThreshold
+    if (priceLevelRangeStart >= open and priceLevelRangeStart <= high) or (priceLevelRangeEnd >= open and priceLevelRangeEnd <= high) or (open >= priceLevelRangeStart and open <= priceLevelRangeEnd) or (high >= priceLevelRangeStart and high <= priceLevelRangeEnd)
         isAtResistance := true
         break
 
-for level in priceLevels
-    levelFloat = str.tonumber(level)
-    if (math.abs(low - levelFloat) <= proximityThreshold  or (low < levelFloat and open > levelFloat and close > levelFloat)) or math.abs(open - levelFloat) <= proximityThreshold
-        isAtSupport := true
-        break
-
-// Check if the current candle is bullish or bearish
-bullishEngulfingCandle = close > open[1] and (close[1] < open[1] or (close[1] > open[1] and candleOpenCloseRange > prevCandleOpenCloseRange))
-candleIsRelativelyStrong = close > open and ((candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or (candleHighLowRange > prevCandleHighLowRange))
-// The top wick should not be larger than the body and the bottom wick
-bullishDirectional = math.abs(high - close) < math.abs(open - close) + directionalThreshold or math.abs(high - close) < math.abs(open - low) + directionalThreshold
+// If the previous candle was red the current candle must be green and engulf at least strength threshold % of the previous candle's range. 
+// If the previous candle was green the current candle must be a stronger green candle.
+candleIsRelativelyStrong = close > open and (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or close[1] > open[1] and candleOpenCloseRange > prevCandleOpenCloseRange)
+// The top wick should not be larger than the body + the bottom wick
+bullishDirectional = math.abs(high - close) < math.abs(close - low)
 isBullishCandle() =>
-    (bullishEngulfingCandle or candleIsRelativelyStrong) and bullishDirectional
+    candleIsRelativelyStrong and bullishDirectional
 
-bearishEngulfingCandle = close < open[1] and (close[1] > open[1] or (close[1] < open[1] and candleOpenCloseRange > prevCandleOpenCloseRange))
-candleIsRelativelyWeak = close < open and ((candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or (candleHighLowRange > prevCandleHighLowRange))
-// The bottom wick should not be larger than the body and the top wick
-bearishDirectional = math.abs(low - close) < math.abs(open - close) + directionalThreshold or math.abs(high - close) < math.abs(open - high) + directionalThreshold
+// If the previous candle was green the current candle must be red and engulf at least strength threshold % of the previous candle's range. 
+// If the previous candle was red the current candle must be a stronger red candle.
+candleIsRelativelyWeak = close < open and (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or close[1] < open[1] and candleOpenCloseRange > prevCandleOpenCloseRange)
+// The bottom wick should not be larger than the body + the top wick
+bearishDirectional = math.abs(close - low) < math.abs(high - close)
 isBearishCandle() =>
-    (bearishEngulfingCandle or candleIsRelativelyWeak) and bearishDirectional
+    candleIsRelativelyWeak and bearishDirectional
     
 // Plot the indications of long and short entries
 plotshape(showLongs and isBullishCandle() and buyVolume > prevAvgBuyVolume and sellVolume < prevAvgSellVolume and sufficientVolume and isAtSupport, title="Long", location=location.belowbar, color=color.green, transp=0, style=shape.triangleup, text="Long")
