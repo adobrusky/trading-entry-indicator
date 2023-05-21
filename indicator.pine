@@ -5,9 +5,10 @@ indicator("VPA Entry Indicator", overlay=true)
 showLongs = input.bool(true, title="Show Long Signals")
 showShorts = input.bool(true, title="Show Short Signals")
 volumeSMALength = input(50, title="Volume SMA Length")
-proximityThreshold = input(0.15, title="Proximity Threshold")
-strengthThreshold = input(0.5, title="Strength Threshold")
-directionalThreshold = input(0.05, title="Directional Threshold")
+acceptableVolumeTolerance = input(0.05, title="Acceptable Volume Tolerance (% less than average)")
+proximityThreshold = input(0.15, title="Proximity Threshold (cents)")
+strengthThreshold = input(0.5, title="Strength Threshold (%)")
+directionalThreshold = input(0.05, title="Directional Threshold (cents)")
 priceLevelsString = input.string("0.0", title="Price Levels (comma-delimited list)")
 
 // Split price level string into an array of strings
@@ -15,7 +16,7 @@ priceLevels = str.split(priceLevelsString, ",")
 
 // Check that volume is sufficient based on an SMA. Volume must be no lower than 5% less than the average
 volumeSMA = ta.sma(volume, volumeSMALength)
-sufficientVolume = volume > volumeSMA - (volumeSMA * 0.05)
+sufficientVolume = volume > volumeSMA - (volumeSMA * acceptableVolumeTolerance)
 
 // Get current candle's buy and sell volume
 buyVolume = (high==low) ? 0 : volume *  (close-low)  / (high-low)
