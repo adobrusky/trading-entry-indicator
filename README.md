@@ -5,7 +5,7 @@ This PineScript code implements an indicator called "VPA Entry Indicator" that a
 ## Usage
 
 1. Apply the indicator to your chart by copying and pasting the code into the PineScript editor.
-2. Adjust the input parameters according to your preferences. You will need to derive your own price levels and include them in the input for the indicator to work. The indicator assumes that your price levels are accurate. The default values are adjusted for ticker symbol SPY.
+2. Adjust the input parameters according to your preferences. You will need to derive your own price levels and include them in the input for the indicator to work. The indicator assumes that your price levels are accurate. The other default parameter values were set based on ticker symbol SPY.
 
 ## Input Parameters
 
