@@ -20,13 +20,12 @@ This PineScript code implements an indicator called "VPA Entry Indicator" that a
 ## Calculation and Conditions
 
 1. The code checks if the volume is sufficient based on an SMA. The volume must be no lower than the average volume - the acceptable volume tolerance * average. This allows users to tweak what they consider acceptable volume.
-2. It calculates the buy and sell volume for the current and previous candles.
+2. It calculates the buy and sell volume for the current candle.
 3. It calculates the average buy and sell volume for the previous two candles.
 4. It calculates the open/close range and high/low range for the current and previous candles.
 5. It checks if the current candle is close enough to any of the specified price levels (based on the proximity threshold), indicating support or resistance.
-6. It defines functions to determine if the current candle is bullish or bearish based on certain conditions.
-7. It considers the directional analysis by comparing the lengths of the wicks and body of the candle to identify potential bullish or bearish signals.
-8. It plots shapes on the chart to indicate potential long and short entry points based on the following conditions:
+6. It defines functions to determine if the current candle is bullish or bearish based on certain price action conditions.
+7. It plots shapes on the chart to indicate potential long and short entry points based on the following conditions:
    - For long entries:
      - The candle is relatively strong (green candle that engulfs at least strength threshold % of the previous candle's range) and has a bullish directional bias.
      - The current buy volume is greater than the average buy volume of the previous two candles.
