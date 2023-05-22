@@ -38,6 +38,7 @@ candleOpenCloseRange = math.abs(close - open)
 
 // Calculate the open/close range of the previous candle
 prevCandleOpenCloseRange = math.abs(close[1] - open[1])
+prevCandleHighLowRange = math.abs(high[1] - low[1])
 
 // Determine if the current candle is close enough to a price level based on the proximity threshold. 
 // A candle is at support if any part of the bottom wick is within the proximity threshold of a price level
@@ -61,7 +62,7 @@ for level in priceLevels
 
 // If the previous candle was red the current candle must be green and engulf at least strength threshold % of the previous candle's range. 
 // If the previous candle was green the current candle must be more aggressive based on body and bottom wick.
-candleIsRelativelyStrong = close > open and (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange or math.abs(low - open) > math.abs(high - low) * strengthThreshold)))
+candleIsRelativelyStrong = close > open and (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange or math.abs(low - open) > prevCandleHighLowRange * strengthThreshold)))
 // The top wick should not be larger than the body + the bottom wick
 bullishDirectional = math.abs(high - close) < math.abs(close - low)
 isBullishCandle() =>
@@ -69,7 +70,7 @@ isBullishCandle() =>
 
 // If the previous candle was green the current candle must be red and engulf at least strength threshold % of the previous candle's range. 
 // If the previous candle was red the current candle must be more aggressive based on body and top wick.
-candleIsRelativelyWeak = close < open and (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange or math.abs(high - open) > math.abs(high - low) * strengthThreshold)))
+candleIsRelativelyWeak = close < open and (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange or math.abs(high - open) > prevCandleHighLowRange * strengthThreshold)))
 // The bottom wick should not be larger than the body + the top wick
 bearishDirectional = math.abs(close - low) < math.abs(high - close)
 isBearishCandle() =>
