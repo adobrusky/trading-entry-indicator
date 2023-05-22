@@ -48,28 +48,28 @@ for level in priceLevels
     levelFloat = str.tonumber(level)
     priceLevelRangeStart = levelFloat - proximityThreshold
     priceLevelRangeEnd = levelFloat + proximityThreshold
-    if (priceLevelRangeStart >= open and priceLevelRangeStart <= low) or (priceLevelRangeEnd >= open and priceLevelRangeEnd <= low) or (open >= priceLevelRangeStart and open <= priceLevelRangeEnd) or (low >= priceLevelRangeStart and low <= priceLevelRangeEnd)
+    if close > levelFloat and (priceLevelRangeStart > open and priceLevelRangeStart < low) or (priceLevelRangeEnd > open and priceLevelRangeEnd < low) or (open > priceLevelRangeStart and open < priceLevelRangeEnd) or (low > priceLevelRangeStart and low < priceLevelRangeEnd)
         isAtSupport := true
         break
 for level in priceLevels
     levelFloat = str.tonumber(level)
     priceLevelRangeStart = levelFloat - proximityThreshold
     priceLevelRangeEnd = levelFloat + proximityThreshold
-    if (priceLevelRangeStart >= open and priceLevelRangeStart <= high) or (priceLevelRangeEnd >= open and priceLevelRangeEnd <= high) or (open >= priceLevelRangeStart and open <= priceLevelRangeEnd) or (high >= priceLevelRangeStart and high <= priceLevelRangeEnd)
+    if close < levelFloat and (priceLevelRangeStart > open and priceLevelRangeStart < high) or (priceLevelRangeEnd > open and priceLevelRangeEnd < high) or (open > priceLevelRangeStart and open < priceLevelRangeEnd) or (high > priceLevelRangeStart and high < priceLevelRangeEnd)
         isAtResistance := true
         break
 
 // If the previous candle was red the current candle must be green and engulf at least strength threshold % of the previous candle's range. 
-// If the previous candle was green the current candle must be a stronger green candle.
-candleIsRelativelyStrong = close > open and (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or close[1] > open[1] and candleOpenCloseRange > prevCandleOpenCloseRange)
+// If the previous candle was green the current candle must be more aggressive based on body and bottom wick.
+candleIsRelativelyStrong = close > open and (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange or math.abs(low - open) > math.abs(high - low) * strengthThreshold)))
 // The top wick should not be larger than the body + the bottom wick
 bullishDirectional = math.abs(high - close) < math.abs(close - low)
 isBullishCandle() =>
     candleIsRelativelyStrong and bullishDirectional
 
 // If the previous candle was green the current candle must be red and engulf at least strength threshold % of the previous candle's range. 
-// If the previous candle was red the current candle must be a stronger red candle.
-candleIsRelativelyWeak = close < open and (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or close[1] < open[1] and candleOpenCloseRange > prevCandleOpenCloseRange)
+// If the previous candle was red the current candle must be more aggressive based on body and top wick.
+candleIsRelativelyWeak = close < open and (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange or math.abs(high - open) > math.abs(high - low) * strengthThreshold)))
 // The bottom wick should not be larger than the body + the top wick
 bearishDirectional = math.abs(close - low) < math.abs(high - close)
 isBearishCandle() =>
