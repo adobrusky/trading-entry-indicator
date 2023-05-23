@@ -1,43 +1,34 @@
 //@version=5
 indicator("VPA Entry Indicator", overlay=true)
 
-// Define input parameters
 showLongs = input.bool(true, title="Show Long Signals")
 showShorts = input.bool(true, title="Show Short Signals")
+showVolumeAnomalies = input.bool(true, title="Show Volume Anomalies")
+priceLevelsString = input.string("0.0", title="Price Levels (comma-delimited list)")
 volumeSMALength = input(50, title="Volume SMA Length")
-acceptableVolumeTolerance = input(0.05, title="Acceptable Volume Tolerance (% less than average)")
+acceptableVolumeTolerance = input(0.0, title="Acceptable Volume Tolerance (% more than average)")
 proximityThreshold = input(0.15, title="Proximity Threshold (cents)")
 strengthThreshold = input(0.55, title="Strength Threshold (%)")
-priceLevelsString = input.string("0.0", title="Price Levels (comma-delimited list)")
-
-// Split price level string into an array of strings
 priceLevels = str.split(priceLevelsString, ",")
 
-// Check that volume is sufficient based on an SMA. Volume must be no lower than the average - the acceptable volume threshold * average. This allows users to tweak what they consider acceptable volume.
 volumeSMA = ta.sma(volume, volumeSMALength)
-sufficientVolume = volume > volumeSMA - (volumeSMA * acceptableVolumeTolerance)
+sufficientVolume = volume > volumeSMA + (volumeSMA * acceptableVolumeTolerance)
 
-// Get current candle's buy and sell volume
+// Get current, previous, and previous previous candles buy/sell volume and average the two previous candle's volume
 buyVolume = (high==low) ? 0 : volume *  (close-low)  / (high-low)
 sellVolume = (high==low) ? 0 : volume * (high-close) / (high-low)
-
-// Get previous candle's buy and sell volume
 prevBuyVolume = (high[1]==low[1]) ? 0 : volume[1] *  (close[1]-low[1])  / (high[1]-low[1])
 prevSellVolume = (high[1]==low[1]) ? 0 : volume[1] * (high[1]-close[1]) / (high[1]-low[1])
-
-// Get previous previous candle's buy and sell volume
 prevPrevBuyVolume = (high[2]==low[2]) ? 0 : volume[2] *  (close[2]-low[2])  / (high[2]-low[2])
 prevPrevSellVolume = (high[2]==low[2]) ? 0 : volume[2] * (high[2]-close[2]) / (high[2]-low[2])
-
-// Calculate the average buy and sell volume for the previous two candles
 prevAvgBuyVolume = (prevBuyVolume + prevPrevBuyVolume) / 2
 prevAvgSellVolume = (prevSellVolume + prevPrevSellVolume) / 2
 
-// Calculate the open/close range of the current candle
+// Calculate the open/close and highLow range of the current and previous candles
 candleOpenCloseRange = math.abs(close - open)
-
-// Calculate the open/close range of the previous candle
+candleHighLowRange = math.abs(high - low)
 prevCandleOpenCloseRange = math.abs(close[1] - open[1])
+prevCandleHighLowRange = math.abs(high[1] - low[1])
 
 // Determine if the current candle is close enough to a price level based on the proximity threshold. 
 // A candle is at support if any part of the bottom wick is within the proximity threshold of a price level
@@ -48,33 +39,39 @@ for level in priceLevels
     levelFloat = str.tonumber(level)
     priceLevelRangeStart = levelFloat - proximityThreshold
     priceLevelRangeEnd = levelFloat + proximityThreshold
-    if (priceLevelRangeStart >= open and priceLevelRangeStart <= low) or (priceLevelRangeEnd >= open and priceLevelRangeEnd <= low) or (open >= priceLevelRangeStart and open <= priceLevelRangeEnd) or (low >= priceLevelRangeStart and low <= priceLevelRangeEnd)
+    if close > levelFloat and (priceLevelRangeStart > open and priceLevelRangeStart < low) or (priceLevelRangeEnd > open and priceLevelRangeEnd < low) or (open > priceLevelRangeStart and open < priceLevelRangeEnd) or (low > priceLevelRangeStart and low < priceLevelRangeEnd)
         isAtSupport := true
         break
 for level in priceLevels
     levelFloat = str.tonumber(level)
     priceLevelRangeStart = levelFloat - proximityThreshold
     priceLevelRangeEnd = levelFloat + proximityThreshold
-    if (priceLevelRangeStart >= open and priceLevelRangeStart <= high) or (priceLevelRangeEnd >= open and priceLevelRangeEnd <= high) or (open >= priceLevelRangeStart and open <= priceLevelRangeEnd) or (high >= priceLevelRangeStart and high <= priceLevelRangeEnd)
+    if close < levelFloat and (priceLevelRangeStart > open and priceLevelRangeStart < high) or (priceLevelRangeEnd > open and priceLevelRangeEnd < high) or (open > priceLevelRangeStart and open < priceLevelRangeEnd) or (high > priceLevelRangeStart and high < priceLevelRangeEnd)
         isAtResistance := true
         break
 
 // If the previous candle was red the current candle must be green and engulf at least strength threshold % of the previous candle's range. 
-// If the previous candle was green the current candle must be a stronger green candle.
-candleIsRelativelyStrong = close > open and (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or close[1] > open[1] and candleOpenCloseRange > prevCandleOpenCloseRange)
+// If the previous candle was green the current candle must be more aggressive based on body and bottom wick.
+candleIsRelativelyStrong = close > open and (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange or math.abs(low - open) > prevCandleHighLowRange * strengthThreshold)))
 // The top wick should not be larger than the body + the bottom wick
 bullishDirectional = math.abs(high - close) < math.abs(close - low)
 isBullishCandle() =>
     candleIsRelativelyStrong and bullishDirectional
 
 // If the previous candle was green the current candle must be red and engulf at least strength threshold % of the previous candle's range. 
-// If the previous candle was red the current candle must be a stronger red candle.
-candleIsRelativelyWeak = close < open and (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or close[1] < open[1] and candleOpenCloseRange > prevCandleOpenCloseRange)
+// If the previous candle was red the current candle must be more aggressive based on body and top wick.
+candleIsRelativelyWeak = close < open and (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange or math.abs(high - open) > prevCandleHighLowRange * strengthThreshold)))
 // The bottom wick should not be larger than the body + the top wick
 bearishDirectional = math.abs(close - low) < math.abs(high - close)
 isBearishCandle() =>
     candleIsRelativelyWeak and bearishDirectional
-    
-// Plot the indications of long and short entries
-plotshape(showLongs and isBullishCandle() and buyVolume > prevAvgBuyVolume and sellVolume < prevAvgSellVolume and sufficientVolume and isAtSupport, title="Long", location=location.belowbar, color=color.green, transp=0, style=shape.triangleup, text="Long")
-plotshape(showShorts and isBearishCandle() and sellVolume > prevAvgSellVolume and buyVolume < prevAvgBuyVolume and sufficientVolume and isAtResistance, title="Short", location=location.abovebar, color=color.red, transp=0, style=shape.triangledown, text="Short")
+
+// Plot volume anomalies and indications of long and short entries
+longSignal = showLongs and isBullishCandle() and buyVolume > prevAvgBuyVolume and sellVolume < prevAvgSellVolume and sufficientVolume and isAtSupport
+shortSignal = showShorts and isBearishCandle() and sellVolume > prevAvgSellVolume and buyVolume < prevAvgBuyVolume and sufficientVolume and isAtResistance
+bullishVolumeAnomaly = showVolumeAnomalies and close < open and close[1] < open[1] and candleOpenCloseRange < prevCandleOpenCloseRange and volume > volume[1] and sufficientVolume and not longSignal and not shortSignal
+bearishVolumeAnomaly = showVolumeAnomalies and close > open and close[1] > open[1] and candleOpenCloseRange < prevCandleOpenCloseRange and volume > volume[1] and sufficientVolume and not longSignal and not shortSignal
+plotshape(bullishVolumeAnomaly, title="Volume Anomaly", location=location.belowbar, color=#c7d867, transp=0, style=shape.triangleup, text="Volume Anomaly")
+plotshape(bearishVolumeAnomaly, title="Volume Anomaly", location=location.abovebar, color=#c7d867, transp=0, style=shape.triangledown, text="Volume Anomaly")
+plotshape(longSignal, title="Long", location=location.belowbar, color=#4bb34f, transp=0, style=shape.triangleup, text="Long")
+plotshape(shortSignal, title="Short", location=location.abovebar, color=color.rgb(235, 99, 99), transp=0, style=shape.triangledown, text="Short")
