@@ -41,9 +41,9 @@ This PineScript code implements an indicator called "VPA Indicator" that assists
      - The current buy volume is less than the average buy volume of the previous two candles.
      - The volume is sufficient.
      - The candle is close to a resistance level.
-  - Some signals may have a + or ++ on the end (i.e. Long++). These extra pluses indicate that certain volume conditions have been met which increase the probability of the signal's success.
-    - The "+" symbol indicates that the volume for the current candle is higher than the volume of the previous candle.
-    - The "++" symbol indicates a signal that is both a volume anomaly and a trading signal. A volume anomaly occurs when the volume for the current candle is higher than the volume of the previous candle, but the open/close range of the current candle is smaller than the open/close range of the previous candle (both candles are of the same color). A volume anomaly at the top of an uptrend indicates evidence of weakness, while a volume anomaly at the bottom of a downtrend indicates evidence of strength. Volume anomalies are also plotted on the chart but can be disabled if desired.
+  - Some signals may have a "+" or "+ Anomaly" on the end (i.e. Long+ or Long + Anomaly). These indicate that certain volume conditions have been met which increase the probability of the signal's success.
+    - The "+" indicates that the volume for the current candle is higher than the volume of the previous candle.
+    - The "Long + Anomaly" or "Short + Anomaly" indicates a signal that is both a volume anomaly and a trading signal. A volume anomaly occurs when the volume for the current candle is higher than the volume of the previous candle, but the open/close range of the current candle is smaller than the open/close range of the previous candle (both candles are of the same color). A volume anomaly at the top of an uptrend indicates evidence of weakness, while a volume anomaly at the bottom of a downtrend indicates evidence of strength. Volume anomalies are also plotted on the chart but can be disabled if desired.
 
 ## Notes
 
