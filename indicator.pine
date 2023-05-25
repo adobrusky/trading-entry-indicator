@@ -43,14 +43,14 @@ for level in priceLevels
     levelFloat = str.tonumber(level)
     priceLevelRangeStart = levelFloat - proximityThreshold
     priceLevelRangeEnd = levelFloat + proximityThreshold
-    if (not isDoji and close > levelFloat) and (priceLevelRangeStart > open and priceLevelRangeStart < low) or (priceLevelRangeEnd > open and priceLevelRangeEnd < low) or (open > priceLevelRangeStart and open < priceLevelRangeEnd) or (low > priceLevelRangeStart and low < priceLevelRangeEnd)
+    if ((isDoji and open > levelFloat) or close > levelFloat) and (priceLevelRangeStart > open and priceLevelRangeStart < low) or (priceLevelRangeEnd > open and priceLevelRangeEnd < low) or (open > priceLevelRangeStart and open < priceLevelRangeEnd) or (low > priceLevelRangeStart and low < priceLevelRangeEnd)
         isAtSupport := true
         break
 for level in priceLevels
     levelFloat = str.tonumber(level)
     priceLevelRangeStart = levelFloat - proximityThreshold
     priceLevelRangeEnd = levelFloat + proximityThreshold
-    if (not isDoji and close < levelFloat) and (priceLevelRangeStart > open and priceLevelRangeStart < high) or (priceLevelRangeEnd > open and priceLevelRangeEnd < high) or (open > priceLevelRangeStart and open < priceLevelRangeEnd) or (high > priceLevelRangeStart and high < priceLevelRangeEnd)
+    if ((isDoji and open < levelFloat) or close < levelFloat) and (priceLevelRangeStart > open and priceLevelRangeStart < high) or (priceLevelRangeEnd > open and priceLevelRangeEnd < high) or (open > priceLevelRangeStart and open < priceLevelRangeEnd) or (high > priceLevelRangeStart and high < priceLevelRangeEnd)
         isAtResistance := true
         break
 
@@ -72,8 +72,8 @@ isBearishCandle() =>
 
 // Plot volume anomalies and indications of long and short signals
 // + signals are candles that have more volume than the previous candle and ++ signals are signals that are also a volume anomaly 
-longSignal = showLongs and (isBullishCandle() or isDoji) and buyVolume > prevAvgBuyVolume and sellVolume < prevAvgSellVolume and sufficientVolume and isAtSupport
-shortSignal = showShorts and (isBearishCandle() or isDoji) and sellVolume > prevAvgSellVolume and buyVolume < prevAvgBuyVolume and sufficientVolume and isAtResistance
+longSignal = showLongs and (isBullishCandle() or isDoji) and buyVolume > prevAvgBuyVolume and (sellVolume < prevAvgSellVolume or isDoji) and sufficientVolume and isAtSupport and buyVolume > sellVolume
+shortSignal = showShorts and (isBearishCandle() or isDoji) and sellVolume > prevAvgSellVolume and (buyVolume < prevAvgBuyVolume or isDoji) and sufficientVolume and isAtResistance and sellVolume > buyVolume
 bullishVolumeAnomaly = showVolumeAnomalies and close < open and close[1] < open[1] and candleOpenCloseRange < prevCandleOpenCloseRange and volume > volume[1] and sufficientVolume
 bearishVolumeAnomaly = showVolumeAnomalies and close > open and close[1] > open[1] and candleOpenCloseRange < prevCandleOpenCloseRange and volume > volume[1] and sufficientVolume
 
@@ -83,5 +83,5 @@ plotshape(longSignal and not bullishVolumeAnomaly and not isVolumeHigher, title=
 plotshape(shortSignal and not bearishVolumeAnomaly and not isVolumeHigher, title="Short", location=location.abovebar, color=color.rgb(241, 90, 103), transp=0, style=shape.triangledown, text="Short")
 plotshape(longSignal and not bullishVolumeAnomaly and isVolumeHigher, title="Long+", location=location.belowbar, color=color.rgb(30, 143, 55), transp=0, style=shape.triangleup, text="Long+")
 plotshape(shortSignal and not bearishVolumeAnomaly and isVolumeHigher, title="Short+", location=location.abovebar, color=color.rgb(241, 90, 103), transp=0, style=shape.triangledown, text="Short+")
-plotshape(longSignal and bullishVolumeAnomaly, title="Long++", location=location.belowbar, color=color.rgb(30, 143, 55), transp=0, style=shape.triangleup, text="Long++")
-plotshape(shortSignal and bearishVolumeAnomaly, title="Short++", location=location.abovebar, color=color.rgb(241, 90, 103), transp=0, style=shape.triangledown, text="Short++")
+plotshape(longSignal and bullishVolumeAnomaly, title="Long + Anomaly", location=location.belowbar, color=color.rgb(30, 143, 55), transp=0, style=shape.triangleup, text="Long + Anomaly")
+plotshape(shortSignal and bearishVolumeAnomaly, title="Short + Anomaly", location=location.abovebar, color=color.rgb(241, 90, 103), transp=0, style=shape.triangledown, text="Short + Anomaly")
