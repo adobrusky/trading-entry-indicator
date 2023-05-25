@@ -54,26 +54,34 @@ for level in priceLevels
         isAtResistance := true
         break
 
-// If the previous candle was red the current candle must be green and engulf at least strength threshold % of the previous candle's range. 
+// Calculate top/bottom wicks and determine sell/buy pressure for determining if the candle is relatively strong/weak
+prevCandleTopWick = close[1] > open[1] ? math.abs(high[1] - close[1]) : math.abs(high[1] - open[1])
+prevCandleBottomWick = close[1] > open[1] ? math.abs(open[1] - low[1]) : math.abs(close[1] - low[1])
+significantSellPressureOnPreviousCandle = prevCandleTopWick > math.abs(high[1] - low[1]) - prevCandleTopWick
+significantBuyPressureOnPreviousCandle = prevCandleBottomWick > math.abs(high[1] - low[1]) - prevCandleBottomWick
+
+// If the previous candle was red the current candle must be green and one of the below must apply:
+//      1. engulf at least strength threshold % of the previous candle's range
+//      2. the previous candle must have significant buy pressure and engulf at least half strength threshold % of the previous candle's range
 // If the previous candle was green the current candle must be green and more aggressive based on body and bottom wick.
-candleIsRelativelyStrong = close > open and (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange or math.abs(low - open) > prevCandleHighLowRange * strengthThreshold)))
+candleIsRelativelyStrong = close > open and (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold or (significantBuyPressureOnPreviousCandle and candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold * 0.5)) or (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange or math.abs(low - open) > prevCandleHighLowRange * strengthThreshold)))
 // The top wick should not be larger than the body + the bottom wick
 bullishDirectional = math.abs(high - close) < math.abs(close - low)
-isBullishCandle() =>
-    candleIsRelativelyStrong and bullishDirectional
+isBullishCandle = candleIsRelativelyStrong and bullishDirectional
 
-// If the previous candle was green the current candle must be red and engulf at least strength threshold % of the previous candle's range. 
+// If the previous candle was green the current candle must be red and one of the below must apply:
+//      1. either engulf at least strength threshold % of the previous candle's range
+//      2. the previous candle must have significant sell pressure and engulf at least half strength threshold % of the previous candle's range. 
 // If the previous candle was red the current candle must be red and more aggressive based on body and top wick.
-candleIsRelativelyWeak = close < open and (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold) or (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange or math.abs(high - open) > prevCandleHighLowRange * strengthThreshold)))
+candleIsRelativelyWeak = close < open and (close[1] > open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold or (significantSellPressureOnPreviousCandle and candleOpenCloseRange > prevCandleOpenCloseRange * strengthThreshold * 0.5)) or (close[1] < open[1] and (candleOpenCloseRange > prevCandleOpenCloseRange or math.abs(high - open) > prevCandleHighLowRange * strengthThreshold)))
 // The bottom wick should not be larger than the body + the top wick
 bearishDirectional = math.abs(close - low) < math.abs(high - close)
-isBearishCandle() =>
-    candleIsRelativelyWeak and bearishDirectional
+isBearishCandle = candleIsRelativelyWeak and bearishDirectional
 
 // Plot volume anomalies and indications of long and short signals
-// + signals are candles that have more volume than the previous candle and ++ signals are signals that are also a volume anomaly 
-longSignal = showLongs and (isBullishCandle() or isDoji) and buyVolume > prevAvgBuyVolume and (sellVolume < prevAvgSellVolume or isDoji) and sufficientVolume and isAtSupport and buyVolume > sellVolume
-shortSignal = showShorts and (isBearishCandle() or isDoji) and sellVolume > prevAvgSellVolume and (buyVolume < prevAvgBuyVolume or isDoji) and sufficientVolume and isAtResistance and sellVolume > buyVolume
+// + signals are candles that have more volume than the previous candle
+longSignal = showLongs and (isBullishCandle or isDoji) and buyVolume > prevAvgBuyVolume and (sellVolume < prevAvgSellVolume or isDoji) and sufficientVolume and isAtSupport and buyVolume > sellVolume
+shortSignal = showShorts and (isBearishCandle or isDoji) and sellVolume > prevAvgSellVolume and (buyVolume < prevAvgBuyVolume or isDoji) and sufficientVolume and isAtResistance and sellVolume > buyVolume
 bullishVolumeAnomaly = showVolumeAnomalies and close < open and close[1] < open[1] and candleOpenCloseRange < prevCandleOpenCloseRange and volume > volume[1] and sufficientVolume
 bearishVolumeAnomaly = showVolumeAnomalies and close > open and close[1] > open[1] and candleOpenCloseRange < prevCandleOpenCloseRange and volume > volume[1] and sufficientVolume
 
