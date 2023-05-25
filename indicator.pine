@@ -4,6 +4,7 @@ indicator("VPA Indicator", overlay=true)
 showLongs = input.bool(true, title="Show Long Signals")
 showShorts = input.bool(true, title="Show Short Signals")
 showVolumeAnomalies = input.bool(true, title="Show Volume Anomalies")
+showGaps = input.bool(true, title="Show Gaps")
 priceLevelsString = input.string("0.0", title="Price Levels (comma-delimited list)")
 volumeSMALength = input(50, title="Volume SMA Length")
 acceptableVolumeThreshold = input(0.0, title="Acceptable Volume Threshold (% more than average)")
@@ -69,6 +70,14 @@ candleIsRelativelyWeak = close < open and (close[1] > open[1] and (candleOpenClo
 bearishDirectional = math.abs(close - low) < math.abs(high - close)
 isBearishCandle() =>
     candleIsRelativelyWeak and bearishDirectional
+
+// Determine if a gap exists based on a specified threshold
+isGapUp = open > close[1] and low > close[1] and sufficientVolume and math.abs(open - close[1]) > math.abs(high[1] - low[1]) * 0.3
+isGapDown = open < close[1] and high < close[1] and sufficientVolume and math.abs(open - close[1]) > math.abs(high[1] - low[1]) * 0.3
+
+// Plot shapes to indicate the presence of a gap on the chart
+plotshape(showGaps and isGapUp, title="Gap", location=location.belowbar, color=color.rgb(255, 238, 88), transp=0, style=shape.triangleup, text="Gap")
+plotshape(showGaps and isGapDown, title="Gap", location=location.abovebar, color=color.rgb(255, 238, 88), transp=0, style=shape.triangledown, text="Gap")
 
 // Plot volume anomalies and indications of long and short signals
 // + signals are candles that have more volume than the previous candle and ++ signals are signals that are also a volume anomaly 
