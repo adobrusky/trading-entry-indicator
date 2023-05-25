@@ -43,14 +43,14 @@ for level in priceLevels
     levelFloat = str.tonumber(level)
     priceLevelRangeStart = levelFloat - proximityThreshold
     priceLevelRangeEnd = levelFloat + proximityThreshold
-    if ((isDoji and open > levelFloat) or close > levelFloat) and (priceLevelRangeStart > open and priceLevelRangeStart < low) or (priceLevelRangeEnd > open and priceLevelRangeEnd < low) or (open > priceLevelRangeStart and open < priceLevelRangeEnd) or (low > priceLevelRangeStart and low < priceLevelRangeEnd)
+    if ((isDoji and open > levelFloat) or close > levelFloat) and (priceLevelRangeStart >= open and priceLevelRangeStart <= low) or (priceLevelRangeEnd >= open and priceLevelRangeEnd <= low) or (open >= priceLevelRangeStart and open <= priceLevelRangeEnd) or (low >= priceLevelRangeStart and low <= priceLevelRangeEnd)
         isAtSupport := true
         break
 for level in priceLevels
     levelFloat = str.tonumber(level)
     priceLevelRangeStart = levelFloat - proximityThreshold
     priceLevelRangeEnd = levelFloat + proximityThreshold
-    if ((isDoji and open < levelFloat) or close < levelFloat) and (priceLevelRangeStart > open and priceLevelRangeStart < high) or (priceLevelRangeEnd > open and priceLevelRangeEnd < high) or (open > priceLevelRangeStart and open < priceLevelRangeEnd) or (high > priceLevelRangeStart and high < priceLevelRangeEnd)
+    if ((isDoji and open < levelFloat) or close < levelFloat) and (priceLevelRangeStart >= open and priceLevelRangeStart <= high) or (priceLevelRangeEnd >= open and priceLevelRangeEnd <= high) or (open >= priceLevelRangeStart and open <= priceLevelRangeEnd) or (high >= priceLevelRangeStart and high <= priceLevelRangeEnd)
         isAtResistance := true
         break
 
