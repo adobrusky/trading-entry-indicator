@@ -4,6 +4,7 @@ indicator("VPA Indicator", overlay=true)
 showLongs = input.bool(true, title="Show Long Signals")
 showShorts = input.bool(true, title="Show Short Signals")
 showVolumeAnomalies = input.bool(true, title="Show Volume Anomalies")
+analyzeMarketSentiment = input.bool(true, title="Analyze Market Sentiment")
 priceLevelsString = input.string("0.0", title="Price Levels (comma-delimited list)")
 volumeSMALength = input(50, title="Volume SMA Length")
 acceptableVolumeThreshold = input(0.0, title="Acceptable Volume Threshold (% more than average)")
@@ -78,10 +79,63 @@ candleIsRelativelyWeak = close < open and (close[1] > open[1] and (candleOpenClo
 bearishDirectional = math.abs(close - low) < math.abs(high - close)
 isBearishCandle = candleIsRelativelyWeak and bearishDirectional
 
+// Check market sentiment. A majority of QQQ, top 6 SPY sectors, and top 3 SPY stocks must have buy/sell volume in agreement with the signal
+buyingSentiment = 0
+
+tickerVolumeQQQ = request.security("QQQ", timeframe.period, volume)
+tickerBuyVolumeQQQ = tickerVolumeQQQ > tickerVolumeQQQ[1] ? tickerVolumeQQQ : 0
+tickerSellVolumeQQQ = tickerVolumeQQQ < tickerVolumeQQQ[1] ? tickerVolumeQQQ : 0
+buyingSentiment += tickerBuyVolumeQQQ > tickerSellVolumeQQQ ? 1 : 0
+
+tickerVolumeXLK = request.security("XLK", timeframe.period, volume)
+tickerBuyVolumeXLK = tickerVolumeXLK > tickerVolumeXLK[1] ? tickerVolumeXLK : 0
+tickerSellVolumeXLK = tickerVolumeXLK < tickerVolumeXLK[1] ? tickerVolumeXLK : 0
+buyingSentiment += tickerBuyVolumeXLK > tickerSellVolumeXLK ? 1 : 0
+
+tickerVolumeXLV = request.security("XLV", timeframe.period, volume)
+tickerBuyVolumeXLV = tickerVolumeXLV > tickerVolumeXLV[1] ? tickerVolumeXLV : 0
+tickerSellVolumeXLV = tickerVolumeXLV < tickerVolumeXLV[1] ? tickerVolumeXLV : 0
+buyingSentiment += tickerBuyVolumeXLV > tickerSellVolumeXLV ? 1 : 0
+
+tickerVolumeXLF = request.security("XLF", timeframe.period, volume)
+tickerBuyVolumeXLF = tickerVolumeXLF > tickerVolumeXLF[1] ? tickerVolumeXLF : 0
+tickerSellVolumeXLF = tickerVolumeXLF < tickerVolumeXLF[1] ? tickerVolumeXLF : 0
+buyingSentiment += tickerBuyVolumeXLF > tickerSellVolumeXLF ? 1 : 0
+
+tickerVolumeXLY = request.security("XLY", timeframe.period, volume)
+tickerBuyVolumeXLY = tickerVolumeXLY > tickerVolumeXLY[1] ? tickerVolumeXLY : 0
+tickerSellVolumeXLY = tickerVolumeXLY < tickerVolumeXLY[1] ? tickerVolumeXLY : 0
+buyingSentiment += tickerBuyVolumeXLY > tickerSellVolumeXLY ? 1 : 0
+
+tickerVolumeXLC = request.security("XLC", timeframe.period, volume)
+tickerBuyVolumeXLC = tickerVolumeXLC > tickerVolumeXLC[1] ? tickerVolumeXLC : 0
+tickerSellVolumeXLC = tickerVolumeXLC < tickerVolumeXLC[1] ? tickerVolumeXLC : 0
+buyingSentiment += tickerBuyVolumeXLC > tickerSellVolumeXLC ? 1 : 0
+
+tickerVolumeXLI = request.security("XLI", timeframe.period, volume)
+tickerBuyVolumeXLI = tickerVolumeXLI > tickerVolumeXLI[1] ? tickerVolumeXLI : 0
+tickerSellVolumeXLI = tickerVolumeXLI < tickerVolumeXLI[1] ? tickerVolumeXLI : 0
+buyingSentiment += tickerBuyVolumeXLI > tickerSellVolumeXLI ? 1 : 0
+
+tickerVolumeAAPL = request.security("AAPL", timeframe.period, volume)
+tickerBuyVolumeAAPL = tickerVolumeAAPL > tickerVolumeAAPL[1] ? tickerVolumeAAPL : 0
+tickerSellVolumeAAPL = tickerVolumeAAPL < tickerVolumeAAPL[1] ? tickerVolumeAAPL : 0
+buyingSentiment += tickerBuyVolumeAAPL > tickerSellVolumeAAPL ? 1 : 0
+
+tickerVolumeMSFT = request.security("MSFT", timeframe.period, volume)
+tickerBuyVolumeMSFT = tickerVolumeMSFT > tickerVolumeMSFT[1] ? tickerVolumeMSFT : 0
+tickerSellVolumeMSFT = tickerVolumeMSFT < tickerVolumeMSFT[1] ? tickerVolumeMSFT : 0
+buyingSentiment += tickerBuyVolumeMSFT > tickerSellVolumeMSFT ? 1 : 0
+
+tickerVolumeAMZN = request.security("AMZN", timeframe.period, volume)
+tickerBuyVolumeAMZN = tickerVolumeAMZN > tickerVolumeAMZN[1] ? tickerVolumeAMZN : 0
+tickerSellVolumeAMZN = tickerVolumeAMZN < tickerVolumeAMZN[1] ? tickerVolumeAMZN : 0
+buyingSentiment += tickerBuyVolumeAMZN > tickerSellVolumeAMZN ? 1 : 0
+
 // Plot volume anomalies and indications of long and short signals
 // + signals are candles that have more volume than the previous candle
-longSignal = showLongs and (isBullishCandle or isDoji) and buyVolume > prevAvgBuyVolume and (sellVolume < prevAvgSellVolume or isDoji) and sufficientVolume and isAtSupport and buyVolume > sellVolume
-shortSignal = showShorts and (isBearishCandle or isDoji) and sellVolume > prevAvgSellVolume and (buyVolume < prevAvgBuyVolume or isDoji) and sufficientVolume and isAtResistance and sellVolume > buyVolume
+longSignal = showLongs and ((analyzeMarketSentiment and buyingSentiment >= 5) or not analyzeMarketSentiment) and (isBullishCandle or isDoji) and buyVolume > prevAvgBuyVolume and (sellVolume < prevAvgSellVolume or isDoji) and sufficientVolume and isAtSupport and buyVolume > sellVolume
+shortSignal = showShorts and ((analyzeMarketSentiment and buyingSentiment <= 5) or not analyzeMarketSentiment) and (isBearishCandle or isDoji) and sellVolume > prevAvgSellVolume and (buyVolume < prevAvgBuyVolume or isDoji) and sufficientVolume and isAtResistance and sellVolume > buyVolume
 bullishVolumeAnomaly = showVolumeAnomalies and close < open and close[1] < open[1] and candleOpenCloseRange < prevCandleOpenCloseRange and volume > volume[1] and sufficientVolume
 bearishVolumeAnomaly = showVolumeAnomalies and close > open and close[1] > open[1] and candleOpenCloseRange < prevCandleOpenCloseRange and volume > volume[1] and sufficientVolume
 
