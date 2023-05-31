@@ -4,12 +4,13 @@ indicator("VPA Indicator", overlay=true)
 showLongs = input.bool(true, title="Show Long Signals")
 showShorts = input.bool(true, title="Show Short Signals")
 showVolumeAnomalies = input.bool(true, title="Show Volume Anomalies")
-analyzeMarketSentiment = input.bool(true, title="Analyze Market Sentiment")
+analyzeMarketSentiment = input.bool(true, title="Market Sentiment Analysis")
 priceLevelsString = input.string("0.0", title="Price Levels (comma-delimited list)")
 volumeSMALength = input(50, title="Volume SMA Length")
 acceptableVolumeThreshold = input(0.0, title="Acceptable Volume Threshold (% more than average)")
 proximityThreshold = input(0.15, title="Proximity Threshold ($)")
 strengthThreshold = input(0.55, title="Strength Threshold (%)")
+sentimentThreshold = input(0.66, title="Market Sentiment Threshold (%)")
 priceLevels = str.split(priceLevelsString, ",")
 
 volumeSMA = ta.sma(volume, volumeSMALength)
@@ -79,63 +80,73 @@ candleIsRelativelyWeak = close < open and (close[1] > open[1] and (candleOpenClo
 bearishDirectional = math.abs(close - low) < math.abs(high - close)
 isBearishCandle = candleIsRelativelyWeak and bearishDirectional
 
-// Check market sentiment. A majority of QQQ, top 6 SPY sectors, and top 3 SPY stocks must have buy/sell volume in agreement with the signal
-buyingSentiment = 0
+// Check market sentiment. A majority of QQQ, top 6 SPY sectors, and top 3 SPY stocks must have buy/sell volume in agreement. Ticker SPY weightings are from https://www.ssga.com/us/en/intermediary/etfs/funds/spdr-sp-500-etf-trust-spy 
+buyingSentiment = 0.0
 
-tickerVolumeQQQ = request.security("QQQ", timeframe.period, volume)
-tickerBuyVolumeQQQ = tickerVolumeQQQ > tickerVolumeQQQ[1] ? tickerVolumeQQQ : 0
-tickerSellVolumeQQQ = tickerVolumeQQQ < tickerVolumeQQQ[1] ? tickerVolumeQQQ : 0
-buyingSentiment += tickerBuyVolumeQQQ > tickerSellVolumeQQQ ? 1 : 0
+// QQQ and XLK must be in agreement for the XLK buying sentiment to be there
+[tickerVolumeQQQ, tickerHighQQQ, tickerLowQQQ, tickerCloseQQQ] = request.security("QQQ", timeframe.period, [volume, high, low, close])
+[tickerVolumeXLK, tickerHighXLK, tickerLowXLK, tickerCloseXLK] = request.security("XLK", timeframe.period, [volume, high, low, close])
+tickerBuyVolumeQQQ = (tickerHighQQQ == tickerLowQQQ) ? 0 : tickerVolumeQQQ * (tickerCloseQQQ - tickerLowQQQ)  / (tickerHighQQQ - tickerLowQQQ)
+tickerSellVolumeQQQ = (tickerHighQQQ == tickerLowQQQ) ? 0 : tickerVolumeQQQ * (tickerHighQQQ - tickerCloseQQQ)  / (tickerHighQQQ - tickerLowQQQ)
+tickerSPYWeightXLK = 28.01
+tickerBuyVolumeXLK = (tickerHighXLK == tickerLowXLK) ? 0 : tickerVolumeXLK * (tickerCloseXLK - tickerLowXLK)  / (tickerHighXLK - tickerLowXLK)
+tickerSellVolumeXLK = (tickerHighXLK == tickerLowXLK) ? 0 : tickerVolumeXLK * (tickerHighXLK - tickerCloseXLK)  / (tickerHighXLK - tickerLowXLK)
+buyingSentiment += tickerBuyVolumeXLK > tickerSellVolumeXLK and tickerBuyVolumeQQQ > tickerSellVolumeQQQ ? tickerSPYWeightXLK : 0
 
-tickerVolumeXLK = request.security("XLK", timeframe.period, volume)
-tickerBuyVolumeXLK = tickerVolumeXLK > tickerVolumeXLK[1] ? tickerVolumeXLK : 0
-tickerSellVolumeXLK = tickerVolumeXLK < tickerVolumeXLK[1] ? tickerVolumeXLK : 0
-buyingSentiment += tickerBuyVolumeXLK > tickerSellVolumeXLK ? 1 : 0
+[tickerVolumeXLV, tickerHighXLV, tickerLowXLV, tickerCloseXLV] = request.security("XLV", timeframe.period, [volume, high, low, close])
+tickerSPYWeightXLV = 13.62
+tickerBuyVolumeXLV = (tickerHighXLV == tickerLowXLV) ? 0 : tickerVolumeXLV * (tickerCloseXLV - tickerLowXLV) / (tickerHighXLV - tickerLowXLV)
+tickerSellVolumeXLV = (tickerHighXLV == tickerLowXLV) ? 0 : tickerVolumeXLV * (tickerHighXLV - tickerCloseXLV) / (tickerHighXLV - tickerLowXLV)
+buyingSentiment += tickerBuyVolumeXLV > tickerSellVolumeXLV ? tickerSPYWeightXLV : 0
 
-tickerVolumeXLV = request.security("XLV", timeframe.period, volume)
-tickerBuyVolumeXLV = tickerVolumeXLV > tickerVolumeXLV[1] ? tickerVolumeXLV : 0
-tickerSellVolumeXLV = tickerVolumeXLV < tickerVolumeXLV[1] ? tickerVolumeXLV : 0
-buyingSentiment += tickerBuyVolumeXLV > tickerSellVolumeXLV ? 1 : 0
+[tickerVolumeXLF, tickerHighXLF, tickerLowXLF, tickerCloseXLF] = request.security("XLF", timeframe.period, [volume, high, low, close])
+tickerSPYWeightXLF = 12.55
+tickerBuyVolumeXLF = (tickerHighXLF == tickerLowXLF) ? 0 : tickerVolumeXLF * (tickerCloseXLF - tickerLowXLF) / (tickerHighXLF - tickerLowXLF)
+tickerSellVolumeXLF = (tickerHighXLF == tickerLowXLF) ? 0 : tickerVolumeXLF * (tickerHighXLF - tickerCloseXLF) / (tickerHighXLF - tickerLowXLF)
+buyingSentiment += tickerBuyVolumeXLF > tickerSellVolumeXLF ? tickerSPYWeightXLF : 0
 
-tickerVolumeXLF = request.security("XLF", timeframe.period, volume)
-tickerBuyVolumeXLF = tickerVolumeXLF > tickerVolumeXLF[1] ? tickerVolumeXLF : 0
-tickerSellVolumeXLF = tickerVolumeXLF < tickerVolumeXLF[1] ? tickerVolumeXLF : 0
-buyingSentiment += tickerBuyVolumeXLF > tickerSellVolumeXLF ? 1 : 0
+[tickerVolumeXLY, tickerHighXLY, tickerLowXLY, tickerCloseXLY] = request.security("XLY", timeframe.period, [volume, high, low, close])
+tickerSPYWeightXLY = 10.12
+tickerBuyVolumeXLY = (tickerHighXLY == tickerLowXLY) ? 0 : tickerVolumeXLY * (tickerCloseXLY - tickerLowXLY) / (tickerHighXLY - tickerLowXLY)
+tickerSellVolumeXLY = (tickerHighXLY == tickerLowXLY) ? 0 : tickerVolumeXLY * (tickerHighXLY - tickerCloseXLY) / (tickerHighXLY - tickerLowXLY)
+buyingSentiment += tickerBuyVolumeXLY > tickerSellVolumeXLY ? tickerSPYWeightXLY : 0
 
-tickerVolumeXLY = request.security("XLY", timeframe.period, volume)
-tickerBuyVolumeXLY = tickerVolumeXLY > tickerVolumeXLY[1] ? tickerVolumeXLY : 0
-tickerSellVolumeXLY = tickerVolumeXLY < tickerVolumeXLY[1] ? tickerVolumeXLY : 0
-buyingSentiment += tickerBuyVolumeXLY > tickerSellVolumeXLY ? 1 : 0
+[tickerVolumeXLC, tickerHighXLC, tickerLowXLC, tickerCloseXLC] = request.security("XLC", timeframe.period, [volume, high, low, close])
+tickerSPYWeightXLC = 8.72
+tickerBuyVolumeXLC = (tickerHighXLC == tickerLowXLC) ? 0 : tickerVolumeXLC * (tickerCloseXLC - tickerLowXLC) / (tickerHighXLC - tickerLowXLC)
+tickerSellVolumeXLC = (tickerHighXLC == tickerLowXLC) ? 0 : tickerVolumeXLC * (tickerHighXLC - tickerCloseXLC) / (tickerHighXLC - tickerLowXLC)
+buyingSentiment += tickerBuyVolumeXLC > tickerSellVolumeXLC ? tickerSPYWeightXLC : 0
 
-tickerVolumeXLC = request.security("XLC", timeframe.period, volume)
-tickerBuyVolumeXLC = tickerVolumeXLC > tickerVolumeXLC[1] ? tickerVolumeXLC : 0
-tickerSellVolumeXLC = tickerVolumeXLC < tickerVolumeXLC[1] ? tickerVolumeXLC : 0
-buyingSentiment += tickerBuyVolumeXLC > tickerSellVolumeXLC ? 1 : 0
+[tickerVolumeXLI, tickerHighXLI, tickerLowXLI, tickerCloseXLI] = request.security("XLI", timeframe.period, [volume, high, low, close])
+tickerSPYWeightXLI = 8.33
+tickerBuyVolumeXLI = (tickerHighXLI == tickerLowXLI) ? 0 : tickerVolumeXLI * (tickerCloseXLI - tickerLowXLI) / (tickerHighXLI - tickerLowXLI)
+tickerSellVolumeXLI = (tickerHighXLI == tickerLowXLI) ? 0 : tickerVolumeXLI * (tickerHighXLI - tickerCloseXLI) / (tickerHighXLI - tickerLowXLI)
+buyingSentiment += tickerBuyVolumeXLI > tickerSellVolumeXLI ? tickerSPYWeightXLI : 0
 
-tickerVolumeXLI = request.security("XLI", timeframe.period, volume)
-tickerBuyVolumeXLI = tickerVolumeXLI > tickerVolumeXLI[1] ? tickerVolumeXLI : 0
-tickerSellVolumeXLI = tickerVolumeXLI < tickerVolumeXLI[1] ? tickerVolumeXLI : 0
-buyingSentiment += tickerBuyVolumeXLI > tickerSellVolumeXLI ? 1 : 0
+[tickerVolumeAAPL, tickerHighAAPL, tickerLowAAPL, tickerCloseAAPL] = request.security("AAPL", timeframe.period, [volume, high, low, close])
+tickerSPYWeightAAPL = 7.4
+tickerBuyVolumeAAPL = (tickerHighAAPL == tickerLowAAPL) ? 0 : tickerVolumeAAPL * (tickerCloseAAPL - tickerLowAAPL) / (tickerHighAAPL - tickerLowAAPL)
+tickerSellVolumeAAPL = (tickerHighAAPL == tickerLowAAPL) ? 0 : tickerVolumeAAPL * (tickerHighAAPL - tickerCloseAAPL) / (tickerHighAAPL - tickerLowAAPL)
+buyingSentiment += tickerBuyVolumeAAPL > tickerSellVolumeAAPL ? tickerSPYWeightAAPL : 0
 
-tickerVolumeAAPL = request.security("AAPL", timeframe.period, volume)
-tickerBuyVolumeAAPL = tickerVolumeAAPL > tickerVolumeAAPL[1] ? tickerVolumeAAPL : 0
-tickerSellVolumeAAPL = tickerVolumeAAPL < tickerVolumeAAPL[1] ? tickerVolumeAAPL : 0
-buyingSentiment += tickerBuyVolumeAAPL > tickerSellVolumeAAPL ? 1 : 0
+[tickerVolumeMSFT, tickerHighMSFT, tickerLowMSFT, tickerCloseMSFT] = request.security("MSFT", timeframe.period, [volume, high, low, close])
+tickerSPYWeightMSFT = 7.03
+tickerBuyVolumeMSFT = (tickerHighMSFT == tickerLowMSFT) ? 0 : tickerVolumeMSFT * (tickerCloseMSFT - tickerLowMSFT) / (tickerHighMSFT - tickerLowMSFT)
+tickerSellVolumeMSFT = (tickerHighMSFT == tickerLowMSFT) ? 0 : tickerVolumeMSFT * (tickerHighMSFT - tickerCloseMSFT) / (tickerHighMSFT - tickerLowMSFT)
+buyingSentiment += tickerBuyVolumeMSFT > tickerSellVolumeMSFT ? tickerSPYWeightMSFT : 0
 
-tickerVolumeMSFT = request.security("MSFT", timeframe.period, volume)
-tickerBuyVolumeMSFT = tickerVolumeMSFT > tickerVolumeMSFT[1] ? tickerVolumeMSFT : 0
-tickerSellVolumeMSFT = tickerVolumeMSFT < tickerVolumeMSFT[1] ? tickerVolumeMSFT : 0
-buyingSentiment += tickerBuyVolumeMSFT > tickerSellVolumeMSFT ? 1 : 0
+[tickerVolumeAMZN, tickerHighAMZN, tickerLowAMZN, tickerCloseAMZN] = request.security("AMZN", timeframe.period, [volume, high, low, close])
+tickerSPYWeightAMZN = 3.04
+tickerBuyVolumeAMZN = (tickerHighAMZN == tickerLowAMZN) ? 0 : tickerVolumeAMZN * (tickerCloseAMZN - tickerLowAMZN) / (tickerHighAMZN - tickerLowAMZN)
+tickerSellVolumeAMZN = (tickerHighAMZN == tickerLowAMZN) ? 0 : tickerVolumeAMZN * (tickerHighAMZN - tickerCloseAMZN) / (tickerHighAMZN - tickerLowAMZN)
+buyingSentiment += tickerBuyVolumeAMZN > tickerSellVolumeAMZN ? tickerSPYWeightAMZN : 0
 
-tickerVolumeAMZN = request.security("AMZN", timeframe.period, volume)
-tickerBuyVolumeAMZN = tickerVolumeAMZN > tickerVolumeAMZN[1] ? tickerVolumeAMZN : 0
-tickerSellVolumeAMZN = tickerVolumeAMZN < tickerVolumeAMZN[1] ? tickerVolumeAMZN : 0
-buyingSentiment += tickerBuyVolumeAMZN > tickerSellVolumeAMZN ? 1 : 0
+totalWeightings = tickerSPYWeightXLK + tickerSPYWeightXLV + tickerSPYWeightXLF + tickerSPYWeightXLY + tickerSPYWeightXLC + tickerSPYWeightXLI + tickerSPYWeightAAPL + tickerSPYWeightMSFT + tickerSPYWeightAMZN
 
 // Plot volume anomalies and indications of long and short signals
 // + signals are candles that have more volume than the previous candle
-longSignal = showLongs and ((analyzeMarketSentiment and buyingSentiment >= 5) or not analyzeMarketSentiment) and (isBullishCandle or isDoji) and buyVolume > prevAvgBuyVolume and (sellVolume < prevAvgSellVolume or isDoji) and sufficientVolume and isAtSupport and buyVolume > sellVolume
-shortSignal = showShorts and ((analyzeMarketSentiment and buyingSentiment <= 5) or not analyzeMarketSentiment) and (isBearishCandle or isDoji) and sellVolume > prevAvgSellVolume and (buyVolume < prevAvgBuyVolume or isDoji) and sufficientVolume and isAtResistance and sellVolume > buyVolume
+longSignal = showLongs and ((analyzeMarketSentiment and buyingSentiment >= totalWeightings * sentimentThreshold) or not analyzeMarketSentiment) and (isBullishCandle or isDoji) and buyVolume > prevAvgBuyVolume and (sellVolume < prevAvgSellVolume or isDoji) and sufficientVolume and isAtSupport and buyVolume > sellVolume
+shortSignal = showShorts and ((analyzeMarketSentiment and buyingSentiment <= (totalWeightings - totalWeightings * sentimentThreshold)) or not analyzeMarketSentiment) and (isBearishCandle or isDoji) and sellVolume > prevAvgSellVolume and (buyVolume < prevAvgBuyVolume or isDoji) and sufficientVolume and isAtResistance and sellVolume > buyVolume
 bullishVolumeAnomaly = showVolumeAnomalies and close < open and close[1] < open[1] and candleOpenCloseRange < prevCandleOpenCloseRange and volume > volume[1] and sufficientVolume
 bearishVolumeAnomaly = showVolumeAnomalies and close > open and close[1] > open[1] and candleOpenCloseRange < prevCandleOpenCloseRange and volume > volume[1] and sufficientVolume
 
