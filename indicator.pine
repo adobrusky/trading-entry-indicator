@@ -5,6 +5,7 @@ showLongs = input.bool(true, title="Show Long Signals")
 showShorts = input.bool(true, title="Show Short Signals")
 showVolumeAnomalies = input.bool(true, title="Show Volume Anomalies")
 analyzeMarketSentiment = input.bool(true, title="Market Sentiment Analysis")
+onlyIndicateSignalsAtLevels = input.bool(true, title="Only Indicate Signals at Price Levels")
 priceLevelsString = input.string("0.0", title="Price Levels (comma-delimited list)")
 volumeSMALength = input(50, title="Volume SMA Length")
 acceptableVolumeThreshold = input(0.0, title="Acceptable Volume Threshold (% more than average)")
@@ -145,8 +146,8 @@ totalWeightings = tickerSPYWeightXLK + tickerSPYWeightXLV + tickerSPYWeightXLF +
 
 // Plot volume anomalies and indications of long and short signals
 // + signals are candles that have more volume than the previous candle
-longSignal = showLongs and ((analyzeMarketSentiment and buyingSentiment >= totalWeightings * sentimentThreshold) or not analyzeMarketSentiment) and (isBullishCandle or isDoji) and buyVolume > prevAvgBuyVolume and (sellVolume < prevAvgSellVolume or isDoji) and sufficientVolume and isAtSupport and buyVolume > sellVolume
-shortSignal = showShorts and ((analyzeMarketSentiment and buyingSentiment <= (totalWeightings - totalWeightings * sentimentThreshold)) or not analyzeMarketSentiment) and (isBearishCandle or isDoji) and sellVolume > prevAvgSellVolume and (buyVolume < prevAvgBuyVolume or isDoji) and sufficientVolume and isAtResistance and sellVolume > buyVolume
+longSignal = showLongs and ((analyzeMarketSentiment and buyingSentiment >= totalWeightings * sentimentThreshold) or not analyzeMarketSentiment) and (isBullishCandle or isDoji) and buyVolume > prevAvgBuyVolume and (sellVolume < prevAvgSellVolume or isDoji) and sufficientVolume and ((isAtSupport and onlyIndicateSignalsAtLevels) or not onlyIndicateSignalsAtLevels) and buyVolume > sellVolume
+shortSignal = showShorts and ((analyzeMarketSentiment and buyingSentiment <= (totalWeightings - totalWeightings * sentimentThreshold)) or not analyzeMarketSentiment) and (isBearishCandle or isDoji) and sellVolume > prevAvgSellVolume and (buyVolume < prevAvgBuyVolume or isDoji) and sufficientVolume and ((isAtResistance and onlyIndicateSignalsAtLevels) or not onlyIndicateSignalsAtLevels) and sellVolume > buyVolume
 bullishVolumeAnomaly = showVolumeAnomalies and close < open and close[1] < open[1] and candleOpenCloseRange < prevCandleOpenCloseRange and volume > volume[1] and sufficientVolume
 bearishVolumeAnomaly = showVolumeAnomalies and close > open and close[1] > open[1] and candleOpenCloseRange < prevCandleOpenCloseRange and volume > volume[1] and sufficientVolume
 
