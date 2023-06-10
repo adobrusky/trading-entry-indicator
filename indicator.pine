@@ -89,55 +89,55 @@ buyingSentiment = 0.0
 [tickerVolumeXLK, tickerHighXLK, tickerLowXLK, tickerCloseXLK] = request.security("XLK", timeframe.period, [volume, high, low, close])
 tickerBuyVolumeQQQ = (tickerHighQQQ == tickerLowQQQ) ? 0 : tickerVolumeQQQ * (tickerCloseQQQ - tickerLowQQQ)  / (tickerHighQQQ - tickerLowQQQ)
 tickerSellVolumeQQQ = (tickerHighQQQ == tickerLowQQQ) ? 0 : tickerVolumeQQQ * (tickerHighQQQ - tickerCloseQQQ)  / (tickerHighQQQ - tickerLowQQQ)
-tickerSPYWeightXLK = 28.01
+tickerSPYWeightXLK = 27.5
 tickerBuyVolumeXLK = (tickerHighXLK == tickerLowXLK) ? 0 : tickerVolumeXLK * (tickerCloseXLK - tickerLowXLK)  / (tickerHighXLK - tickerLowXLK)
 tickerSellVolumeXLK = (tickerHighXLK == tickerLowXLK) ? 0 : tickerVolumeXLK * (tickerHighXLK - tickerCloseXLK)  / (tickerHighXLK - tickerLowXLK)
 buyingSentiment += tickerBuyVolumeXLK > tickerSellVolumeXLK and tickerBuyVolumeQQQ > tickerSellVolumeQQQ ? tickerSPYWeightXLK : 0
 
 [tickerVolumeXLV, tickerHighXLV, tickerLowXLV, tickerCloseXLV] = request.security("XLV", timeframe.period, [volume, high, low, close])
-tickerSPYWeightXLV = 13.62
+tickerSPYWeightXLV = 13.59
 tickerBuyVolumeXLV = (tickerHighXLV == tickerLowXLV) ? 0 : tickerVolumeXLV * (tickerCloseXLV - tickerLowXLV) / (tickerHighXLV - tickerLowXLV)
 tickerSellVolumeXLV = (tickerHighXLV == tickerLowXLV) ? 0 : tickerVolumeXLV * (tickerHighXLV - tickerCloseXLV) / (tickerHighXLV - tickerLowXLV)
 buyingSentiment += tickerBuyVolumeXLV > tickerSellVolumeXLV ? tickerSPYWeightXLV : 0
 
 [tickerVolumeXLF, tickerHighXLF, tickerLowXLF, tickerCloseXLF] = request.security("XLF", timeframe.period, [volume, high, low, close])
-tickerSPYWeightXLF = 12.55
+tickerSPYWeightXLF = 12.67
 tickerBuyVolumeXLF = (tickerHighXLF == tickerLowXLF) ? 0 : tickerVolumeXLF * (tickerCloseXLF - tickerLowXLF) / (tickerHighXLF - tickerLowXLF)
 tickerSellVolumeXLF = (tickerHighXLF == tickerLowXLF) ? 0 : tickerVolumeXLF * (tickerHighXLF - tickerCloseXLF) / (tickerHighXLF - tickerLowXLF)
 buyingSentiment += tickerBuyVolumeXLF > tickerSellVolumeXLF ? tickerSPYWeightXLF : 0
 
 [tickerVolumeXLY, tickerHighXLY, tickerLowXLY, tickerCloseXLY] = request.security("XLY", timeframe.period, [volume, high, low, close])
-tickerSPYWeightXLY = 10.12
+tickerSPYWeightXLY = 10.44
 tickerBuyVolumeXLY = (tickerHighXLY == tickerLowXLY) ? 0 : tickerVolumeXLY * (tickerCloseXLY - tickerLowXLY) / (tickerHighXLY - tickerLowXLY)
 tickerSellVolumeXLY = (tickerHighXLY == tickerLowXLY) ? 0 : tickerVolumeXLY * (tickerHighXLY - tickerCloseXLY) / (tickerHighXLY - tickerLowXLY)
 buyingSentiment += tickerBuyVolumeXLY > tickerSellVolumeXLY ? tickerSPYWeightXLY : 0
 
 [tickerVolumeXLC, tickerHighXLC, tickerLowXLC, tickerCloseXLC] = request.security("XLC", timeframe.period, [volume, high, low, close])
-tickerSPYWeightXLC = 8.72
+tickerSPYWeightXLC = 8.59
 tickerBuyVolumeXLC = (tickerHighXLC == tickerLowXLC) ? 0 : tickerVolumeXLC * (tickerCloseXLC - tickerLowXLC) / (tickerHighXLC - tickerLowXLC)
 tickerSellVolumeXLC = (tickerHighXLC == tickerLowXLC) ? 0 : tickerVolumeXLC * (tickerHighXLC - tickerCloseXLC) / (tickerHighXLC - tickerLowXLC)
 buyingSentiment += tickerBuyVolumeXLC > tickerSellVolumeXLC ? tickerSPYWeightXLC : 0
 
 [tickerVolumeXLI, tickerHighXLI, tickerLowXLI, tickerCloseXLI] = request.security("XLI", timeframe.period, [volume, high, low, close])
-tickerSPYWeightXLI = 8.33
+tickerSPYWeightXLI = 8.5
 tickerBuyVolumeXLI = (tickerHighXLI == tickerLowXLI) ? 0 : tickerVolumeXLI * (tickerCloseXLI - tickerLowXLI) / (tickerHighXLI - tickerLowXLI)
 tickerSellVolumeXLI = (tickerHighXLI == tickerLowXLI) ? 0 : tickerVolumeXLI * (tickerHighXLI - tickerCloseXLI) / (tickerHighXLI - tickerLowXLI)
 buyingSentiment += tickerBuyVolumeXLI > tickerSellVolumeXLI ? tickerSPYWeightXLI : 0
 
 [tickerVolumeAAPL, tickerHighAAPL, tickerLowAAPL, tickerCloseAAPL] = request.security("AAPL", timeframe.period, [volume, high, low, close])
-tickerSPYWeightAAPL = 7.4
+tickerSPYWeightAAPL = 7.46
 tickerBuyVolumeAAPL = (tickerHighAAPL == tickerLowAAPL) ? 0 : tickerVolumeAAPL * (tickerCloseAAPL - tickerLowAAPL) / (tickerHighAAPL - tickerLowAAPL)
 tickerSellVolumeAAPL = (tickerHighAAPL == tickerLowAAPL) ? 0 : tickerVolumeAAPL * (tickerHighAAPL - tickerCloseAAPL) / (tickerHighAAPL - tickerLowAAPL)
 buyingSentiment += tickerBuyVolumeAAPL > tickerSellVolumeAAPL ? tickerSPYWeightAAPL : 0
 
 [tickerVolumeMSFT, tickerHighMSFT, tickerLowMSFT, tickerCloseMSFT] = request.security("MSFT", timeframe.period, [volume, high, low, close])
-tickerSPYWeightMSFT = 7.03
+tickerSPYWeightMSFT = 6.72
 tickerBuyVolumeMSFT = (tickerHighMSFT == tickerLowMSFT) ? 0 : tickerVolumeMSFT * (tickerCloseMSFT - tickerLowMSFT) / (tickerHighMSFT - tickerLowMSFT)
 tickerSellVolumeMSFT = (tickerHighMSFT == tickerLowMSFT) ? 0 : tickerVolumeMSFT * (tickerHighMSFT - tickerCloseMSFT) / (tickerHighMSFT - tickerLowMSFT)
 buyingSentiment += tickerBuyVolumeMSFT > tickerSellVolumeMSFT ? tickerSPYWeightMSFT : 0
 
 [tickerVolumeAMZN, tickerHighAMZN, tickerLowAMZN, tickerCloseAMZN] = request.security("AMZN", timeframe.period, [volume, high, low, close])
-tickerSPYWeightAMZN = 3.04
+tickerSPYWeightAMZN = 3.07
 tickerBuyVolumeAMZN = (tickerHighAMZN == tickerLowAMZN) ? 0 : tickerVolumeAMZN * (tickerCloseAMZN - tickerLowAMZN) / (tickerHighAMZN - tickerLowAMZN)
 tickerSellVolumeAMZN = (tickerHighAMZN == tickerLowAMZN) ? 0 : tickerVolumeAMZN * (tickerHighAMZN - tickerCloseAMZN) / (tickerHighAMZN - tickerLowAMZN)
 buyingSentiment += tickerBuyVolumeAMZN > tickerSellVolumeAMZN ? tickerSPYWeightAMZN : 0
