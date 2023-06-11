@@ -42,20 +42,21 @@ isDoji = math.abs(close - open) < (candleHighLowRange * 0.1) and volume > volume
 // A candle is at resistance if any part of the top wick is within the proximity threshold of a price level
 isAtSupport = false
 isAtResistance = false
-for level in priceLevels
-    levelFloat = str.tonumber(level)
-    priceLevelRangeStart = levelFloat - proximityThreshold
-    priceLevelRangeEnd = levelFloat + proximityThreshold
-    if ((isDoji and open > levelFloat) or close > levelFloat) and (priceLevelRangeStart >= open and priceLevelRangeStart <= low) or (priceLevelRangeEnd >= open and priceLevelRangeEnd <= low) or (open >= priceLevelRangeStart and open <= priceLevelRangeEnd) or (low >= priceLevelRangeStart and low <= priceLevelRangeEnd)
-        isAtSupport := true
-        break
-for level in priceLevels
-    levelFloat = str.tonumber(level)
-    priceLevelRangeStart = levelFloat - proximityThreshold
-    priceLevelRangeEnd = levelFloat + proximityThreshold
-    if ((isDoji and open < levelFloat) or close < levelFloat) and (priceLevelRangeStart >= open and priceLevelRangeStart <= high) or (priceLevelRangeEnd >= open and priceLevelRangeEnd <= high) or (open >= priceLevelRangeStart and open <= priceLevelRangeEnd) or (high >= priceLevelRangeStart and high <= priceLevelRangeEnd)
-        isAtResistance := true
-        break
+if onlyIndicateSignalsAtLevels
+    for level in priceLevels
+        levelFloat = str.tonumber(level)
+        priceLevelRangeStart = levelFloat - proximityThreshold
+        priceLevelRangeEnd = levelFloat + proximityThreshold
+        if ((isDoji and open > levelFloat) or close > levelFloat) and (priceLevelRangeStart >= open and priceLevelRangeStart <= low) or (priceLevelRangeEnd >= open and priceLevelRangeEnd <= low) or (open >= priceLevelRangeStart and open <= priceLevelRangeEnd) or (low >= priceLevelRangeStart and low <= priceLevelRangeEnd)
+            isAtSupport := true
+            break
+    for level in priceLevels
+        levelFloat = str.tonumber(level)
+        priceLevelRangeStart = levelFloat - proximityThreshold
+        priceLevelRangeEnd = levelFloat + proximityThreshold
+        if ((isDoji and open < levelFloat) or close < levelFloat) and (priceLevelRangeStart >= open and priceLevelRangeStart <= high) or (priceLevelRangeEnd >= open and priceLevelRangeEnd <= high) or (open >= priceLevelRangeStart and open <= priceLevelRangeEnd) or (high >= priceLevelRangeStart and high <= priceLevelRangeEnd)
+            isAtResistance := true
+            break
 
 // Calculate top/bottom wicks and determine sell/buy pressure for determining if the candle is relatively strong/weak
 prevCandleTopWick = close[1] > open[1] ? math.abs(high[1] - close[1]) : math.abs(high[1] - open[1])
