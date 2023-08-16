@@ -1,6 +1,6 @@
-# VPA Indicator PineScript Indicator
+# VPA Signal Indicator PineScript Indicator
 
-This PineScript code implements an indicator called "VPA Indicator" that assists in identifying potential long and short entry signals for short-term trading based on volume and price action (VPA). This indicator is NOT lagging. It uses volume, price levels, and price action to identify potential entry signals and it plots shapes on the chart to indicate the signals. The only part of the indicator that is lagging is the volume SMA that is used to determine if the volume is sufficient.
+This PineScript code implements an indicator called "VPA Signal Indicator" that assists in identifying potential long and short entry signals for short-term trading based on volume and price action (VPA). This indicator is NOT lagging. It uses volume, price levels, and price action to identify potential entry signals and it plots shapes on the chart to indicate the signals. The only part of the indicator that is lagging is the volume SMA that is used to determine if the volume is sufficient.
 
 ## Usage
 
@@ -51,4 +51,4 @@ This PineScript code implements an indicator called "VPA Indicator" that assists
 - Adjust the input parameters and conditions according to your trading strategy and preferences.
 - Test the indicator thoroughly on historical data and in a simulated or paper trading environment before using it with real funds.
 
-**Disclaimer:** This indicator does not guarantee profitable trades and should be used at your own risk. A high probability of the entries that are signaled result in successful trades when accurate price levels are used and the indicator is paired with additional analysis; however, the indicator will still occasionally miss good entries and signal poor entries so do not interpret the indicator's signals as law. Always perform your own analysis and exercise caution in the financial markets.
+**Disclaimer:** This indicator does not guarantee profitable trades and should be used at your own risk. Always perform your own analysis and exercise caution in the financial markets.
