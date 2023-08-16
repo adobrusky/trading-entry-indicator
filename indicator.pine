@@ -1,5 +1,5 @@
 //@version=5
-indicator("VPA Indicator", overlay=true)
+indicator("VPA Signal Indicator", overlay=true)
 
 showLongs = input.bool(true, title="Show Long Signals")
 showShorts = input.bool(true, title="Show Short Signals")
